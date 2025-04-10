@@ -7,7 +7,6 @@ import java.util.List;
 public class ProductStore {
 
     private static final List<Product> products = new ArrayList<>();
-    private static final String PRODUCT_ALREADY_EXISTS_MSG = "product already exists with code %s";
 
     public static void clear() {
         products.clear();
@@ -18,10 +17,14 @@ public class ProductStore {
     }
 
     public static void add(String productCode, BigDecimal productPrice) {
-        if (productAlreadyExistsFor(productCode)) {
-            throw new ProductAlreadyExistsException(PRODUCT_ALREADY_EXISTS_MSG.formatted(productCode));
-        }
+        throwIfProductAlreadyExistsWithGiven(productCode);
         products.add(new Product(productCode, productPrice));
+    }
+
+    private static void throwIfProductAlreadyExistsWithGiven(String productCode) {
+        if (productAlreadyExistsWithGiven(productCode)) {
+            throw new ProductAlreadyExistsException(ProductCode.of(productCode));
+        }
     }
 
     public static Product get(String productCode) {
@@ -31,7 +34,7 @@ public class ProductStore {
                 .orElseThrow(() -> new ProductNotFoundException(String.format("product does not exists for code %s", productCode)));
     }
 
-    private static boolean productAlreadyExistsFor(String productCode) {
+    private static boolean productAlreadyExistsWithGiven(String productCode) {
         return products.stream()
                 .anyMatch(product -> product.code().equals(productCode));
     }
