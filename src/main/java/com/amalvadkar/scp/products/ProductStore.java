@@ -17,14 +17,14 @@ public class ProductStore {
         return products;
     }
 
-    public void add(String productCode, BigDecimal productPrice) {
+    public static void add(String productCode, BigDecimal productPrice) {
         if (productAlreadyExistsFor(productCode)) {
             throw new ProductAlreadyExistsException(PRODUCT_ALREADY_EXISTS_MSG.formatted(productCode));
         }
         products.add(new Product(productCode, productPrice));
     }
 
-    public Product get(String productCode) {
+    public static Product get(String productCode) {
         return products.stream()
                 .filter(product -> product.code().equals(productCode))
                 .findFirst()
