@@ -2,7 +2,12 @@ package com.amalvadkar.scp.products;
 
 public class ProductAlreadyExistsException extends RuntimeException{
 
-    public ProductAlreadyExistsException(ProductCode productCode) {
-        super("product already exists with code %s".formatted(productCode.code()));
+    private ProductAlreadyExistsException(String message) {
+        super(message);
+    }
+
+    public static ProductAlreadyExistsException of(ProductCode productCode) {
+        return new ProductAlreadyExistsException("product already exists with code %s"
+                .formatted(productCode.code()));
     }
 }
