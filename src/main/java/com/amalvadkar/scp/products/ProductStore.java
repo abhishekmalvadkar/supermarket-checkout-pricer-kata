@@ -1,46 +1,43 @@
 package com.amalvadkar.scp.products;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static java.util.Objects.isNull;
 
 public class ProductStore {
 
-    private static final List<Product> products = new ArrayList<>();
+    private static final Map<String,Product> PRODUCT_ID_TO_PRODUCT_MAP = new ConcurrentHashMap<>();
 
     public static void clear() {
-        products.clear();
+        PRODUCT_ID_TO_PRODUCT_MAP.clear();
     }
 
     public static List<Product> items() {
-        return products;
+        return PRODUCT_ID_TO_PRODUCT_MAP.values().stream().toList();
     }
 
     public static void add(String productCode, BigDecimal productPrice) {
         throwIfProductAlreadyExistsWithGiven(productCode);
-        products.add(new Product(productCode, productPrice));
+        PRODUCT_ID_TO_PRODUCT_MAP.put(productCode,new Product(productCode, productPrice));
     }
 
     public static Product get(String productCode) {
-        return products.stream()
-                .filter(by(productCode))
-                .findFirst()
-                .orElseThrow(productNotFoundExceptionWith(productCode));
+        Product product = PRODUCT_ID_TO_PRODUCT_MAP.get(productCode);
+        if (doesNotExistsForGiveCode(product)) {
+            throw ProductNotFoundException.of(ProductCode.of(productCode));
+        }
+        return product;
     }
 
-    private static Predicate<Product> by(String productCode) {
-        return product -> Objects.equals(product.code(), productCode);
+    private static boolean doesNotExistsForGiveCode(Product product) {
+        return isNull(product);
     }
 
     private static boolean productAlreadyExistsWithGiven(String productCode) {
-        return products.stream().anyMatch(by(productCode));
-    }
-
-    private static Supplier<ProductNotFoundException> productNotFoundExceptionWith(String productCode) {
-        return () -> ProductNotFoundException.of(ProductCode.of(productCode));
+        return PRODUCT_ID_TO_PRODUCT_MAP.containsKey(productCode);
     }
 
     private static void throwIfProductAlreadyExistsWithGiven(String productCode) {
