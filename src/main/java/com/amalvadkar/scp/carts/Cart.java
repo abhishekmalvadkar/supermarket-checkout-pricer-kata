@@ -25,7 +25,7 @@ public class Cart {
 
     public void scan(String productCode) {
         if (itemPresentInCartWith(productCode)) {
-            OrderItem existsingOrderItem = productCodeToOrderItemMap.get(productCode);
+            OrderItem existsingOrderItem = findItemInCartBy(productCode);
             OrderItem updatedQuatityOrderItem = existsingOrderItem.incrementQuantity();
             addToCart(productCode, updatedQuatityOrderItem);
             return;
@@ -34,6 +34,10 @@ public class Cart {
         Product product = ProductStore.get(productCode);
         OrderItem orderItem = new OrderItem(product);
         addToCart(productCode, orderItem);
+    }
+
+    private OrderItem findItemInCartBy(String productCode) {
+        return productCodeToOrderItemMap.get(productCode);
     }
 
     private void addToCart(String productCode, OrderItem orderItem) {
