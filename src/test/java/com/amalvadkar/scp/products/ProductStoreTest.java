@@ -33,5 +33,14 @@ public class ProductStoreTest {
                 .hasMessage("product already exists with code P001");
         assertThat(ProductStore.items()).hasSize(1);
     }
+
+    @Test
+    void should_return_product_for_given_product_code() {
+        ProductStore.add("P002", new BigDecimal("200"));
+        Product product = ProductStore.get("P002");
+        assertThat(product.code()).isEqualTo("P002");
+        assertThat(product.price()).isEqualTo(new BigDecimal("200"));
+        assertThat(ProductStore.items()).hasSize(1);
+    }
     
 }
