@@ -17,12 +17,6 @@ public class Cart {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    private static BigDecimal calculatePriceByQuantity(OrderItem orderItem) {
-        BigDecimal quantity = new BigDecimal(Integer.toString(orderItem.quantity()));
-        BigDecimal price = orderItem.product().price();
-        return price.multiply(quantity);
-    }
-
     public void scan(String productCode) {
         if (itemPresentInCartWith(productCode)) {
             OrderItem existsingOrderItem = findItemInCartBy(productCode);
@@ -34,6 +28,10 @@ public class Cart {
         Product product = ProductStore.get(productCode);
         OrderItem orderItem = new OrderItem(product);
         addToCart(productCode, orderItem);
+    }
+
+    public int totalItems() {
+        return productCodeToOrderItemMap.size();
     }
 
     private OrderItem findItemInCartBy(String productCode) {
@@ -48,7 +46,9 @@ public class Cart {
         return productCodeToOrderItemMap.containsKey(productCode);
     }
 
-    public int totalItems() {
-        return productCodeToOrderItemMap.size();
+    private static BigDecimal calculatePriceByQuantity(OrderItem orderItem) {
+        BigDecimal quantity = new BigDecimal(Integer.toString(orderItem.quantity()));
+        BigDecimal price = orderItem.product().price();
+        return price.multiply(quantity);
     }
 }
