@@ -1,20 +1,14 @@
 package com.amalvadkar.scp.carts;
 
 import com.amalvadkar.scp.products.Product;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 
-@Setter
-@Getter
-@Accessors(fluent = true)
-public final class OrderItem {
-    private Product product;
-    private int quantity;
-
+public record OrderItem(Product product, int quantity) {
     public OrderItem(Product product) {
-        this.product = product;
-        this.quantity = 1;
+        this(product, 1);
+    }
+
+    public OrderItem incrementQuantity(){
+        return new OrderItem(product, quantity + 1);
     }
 
 }
