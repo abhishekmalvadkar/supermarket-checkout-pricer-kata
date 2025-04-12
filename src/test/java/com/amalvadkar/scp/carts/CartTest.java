@@ -23,7 +23,7 @@ class CartTest {
     }
 
     @Test
-    void should_return_total_amount_if_i_scan_two_products() throws Exception {
+    void should_return_total_amount_if_i_scan_two_products() {
         ProductStore.add("P001", new BigDecimal("150"));
         ProductStore.add("P002", new BigDecimal("147.50"));
 
