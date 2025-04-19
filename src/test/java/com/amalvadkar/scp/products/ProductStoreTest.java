@@ -1,5 +1,6 @@
 package com.amalvadkar.scp.products;
 
+import com.amalvadkar.scp.common.AbstractTest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -8,7 +9,7 @@ import java.math.BigDecimal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-public class ProductStoreTest {
+public class ProductStoreTest extends AbstractTest {
 
     @BeforeEach
     void setUp() {
