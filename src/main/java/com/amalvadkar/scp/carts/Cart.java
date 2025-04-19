@@ -4,6 +4,7 @@ import com.amalvadkar.scp.products.Product;
 import com.amalvadkar.scp.products.ProductStore;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,6 +22,19 @@ public class Cart {
         if (itemPresentInCartWith(productCode)) {
             OrderItem existsingOrderItem = findItemInCartBy(productCode);
             OrderItem updatedQuatityOrderItem = existsingOrderItem.incrementQuantity();
+
+            List<DiscountRule> discountRules = ProductStore.discountRulesFor(productCode);
+            if (discountRules != null) {
+                for (DiscountRule discountRule : discountRules) {
+                    int quantity = discountRule.quantity();
+                    if (updatedQuatityOrderItem.quantity() % quantity == 0) {
+                        OrderItem orderItemWithDiscountRule = updatedQuatityOrderItem.withDiscountRule(discountRule);
+                        addToCart(productCode, orderItemWithDiscountRule);
+                        return;
+                    }
+                }
+            }
+
             addToCart(productCode, updatedQuatityOrderItem);
             return;
         }
@@ -47,6 +61,22 @@ public class Cart {
     }
 
     private static BigDecimal calculatePriceByQuantity(OrderItem orderItem) {
+        DiscountRule discountRule = orderItem.discountRule();
+        if (discountRule != null) {
+            int currentQuantity = orderItem.quantity();
+            int discountRuleQuantity = discountRule.quantity();
+
+            int noOfItemUnitPriceApply = currentQuantity % discountRuleQuantity;
+            int noOfItemDiscountPriceApply = currentQuantity / discountRuleQuantity;
+
+            BigDecimal unitPrice = orderItem.product().price()
+                    .multiply(new BigDecimal(Integer.toString(noOfItemUnitPriceApply)));
+
+            BigDecimal discountPrice = discountRule.price()
+                    .multiply(new BigDecimal(Integer.toString(noOfItemDiscountPriceApply)));
+
+            return unitPrice.add(discountPrice);
+        }
         BigDecimal quantity = new BigDecimal(Integer.toString(orderItem.quantity()));
         BigDecimal price = orderItem.product().price();
         return price.multiply(quantity);

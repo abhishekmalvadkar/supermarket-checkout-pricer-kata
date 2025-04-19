@@ -1,5 +1,7 @@
 package com.amalvadkar.scp.products;
 
+import com.amalvadkar.scp.carts.DiscountRule;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +12,7 @@ import static java.util.Objects.isNull;
 public class ProductStore {
 
     private static final Map<String,Product> PRODUCT_ID_TO_PRODUCT_MAP = new ConcurrentHashMap<>();
+    private static final Map<String, List<DiscountRule>> PRODUCT_CODE_TO_DISCOUNT_RULES = new ConcurrentHashMap<>();
 
     public static void clear() {
         PRODUCT_ID_TO_PRODUCT_MAP.clear();
@@ -44,5 +47,13 @@ public class ProductStore {
         if (productAlreadyExistsWithGiven(productCode)) {
             throw ProductAlreadyExistsException.of(ProductCode.of(productCode));
         }
+    }
+
+    public static void addDiscountRules(String productCode , List<DiscountRule> discountRules) {
+        PRODUCT_CODE_TO_DISCOUNT_RULES.put(productCode, discountRules);
+    }
+
+    public static List<DiscountRule> discountRulesFor(String productCode) {
+        return PRODUCT_CODE_TO_DISCOUNT_RULES.get(productCode);
     }
 }
