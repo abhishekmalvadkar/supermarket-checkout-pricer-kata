@@ -1,5 +1,6 @@
 package com.amalvadkar.scp.carts;
 
+import com.amalvadkar.scp.common.AbstractTest;
 import com.amalvadkar.scp.products.ProductStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,7 +10,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class CartTest {
+class CartTest extends AbstractTest {
 
     @BeforeEach
     void setUp() {
