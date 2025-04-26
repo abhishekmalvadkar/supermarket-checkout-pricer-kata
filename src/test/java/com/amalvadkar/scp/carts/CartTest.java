@@ -244,4 +244,44 @@ class CartTest extends AbstractTest {
                 TOTAL AMOUNT DUE: 290
                 """);
     }
+
+    @Test
+    void should_generate_receipt_with_multiple_product_scan_with_discount_for_multiple_quantity() {
+        ProductStore.add("P001", new BigDecimal("50"));
+        ProductStore.add("P002", new BigDecimal("30"));
+        ProductStore.add("P003", new BigDecimal("20"));
+        ProductStore.add("P004", new BigDecimal("15"));
+
+        ProductStore.addDiscountRules("P001",
+                List.of(DiscountRule.from(3, new BigDecimal("130"))));
+        ProductStore.addDiscountRules("P002",
+                List.of(DiscountRule.from(2, new BigDecimal(45))));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+
+        cart.scan("P002");
+        cart.scan("P002");
+        cart.scan("P002");
+        cart.scan("P002");
+
+        cart.scan("P003");
+        cart.scan("P004");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P001, Quantity: 6, Unit Price: 50, Subtotal: 260 (Applied discount: 3 for 130)
+                Product: P002, Quantity: 4, Unit Price: 30, Subtotal: 90 (Applied discount: 2 for 45)
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+                
+                TOTAL AMOUNT DUE: 385
+                """);
+    }
 }
