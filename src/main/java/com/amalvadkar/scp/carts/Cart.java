@@ -4,12 +4,18 @@ import com.amalvadkar.scp.products.Product;
 import com.amalvadkar.scp.products.ProductStore;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 
 public class Cart {
 
-    private final Map<String, OrderItem> productCodeToOrderItemMap = new ConcurrentHashMap<>();
+    private static final String PRODUCT_LINE_CONTENT = "Product: %s, Quantity: %d, Unit Price: %s, Subtotal: %s";
+    private static final String PRODUCT_LINE_CONTENT_WITH_DISCOUNT = "Product: %s, Quantity: %d, Unit Price: %s, Subtotal: %s (Applied discount: %s for %s)";
+    private static final String LINE_BREAK = "\n";
+    private final Map<String, OrderItem> productCodeToOrderItemMap = new LinkedHashMap<>();
 
     public BigDecimal totalAmount() {
         return productCodeToOrderItemMap.values().stream()
@@ -88,5 +94,58 @@ public class Cart {
 
     private static boolean productHasDiscountRule(OrderItem orderItem) {
         return orderItem.discountRule() != null;
+    }
+
+    public String receipt() {
+        List<String> productLines = new ArrayList<>();
+        for (Map.Entry<String, OrderItem> productEntry : productCodeToOrderItemMap.entrySet()) {
+            String productLine = prepareProductLine(productEntry);
+            productLines.add(productLine);
+        }
+        return prepareReceipt(productLines);
+    }
+
+    private String prepareReceipt(List<String> productLine) {
+        String productsLines = String.join(LINE_BREAK, productLine);
+        return """
+                Receipt
+                
+                %s
+                
+                TOTAL AMOUNT DUE: %s
+                """.formatted(productsLines, totalAmount());
+    }
+
+    private static String prepareProductLine(Map.Entry<String, OrderItem> productEntry) {
+        OrderItem orderItem = getValue(productEntry);
+        if (hasDiscount(orderItem)) {
+            return prepareWithDoscountProductLine(productEntry);
+        } else {
+            return prepareWithoutDiscountProductLine(productEntry);
+        }
+    }
+
+    private static OrderItem getValue(Map.Entry<String, OrderItem> productEntry) {
+        return productEntry.getValue();
+    }
+
+    private static String prepareWithoutDiscountProductLine(Map.Entry<String, OrderItem> productEntry) {
+        return PRODUCT_LINE_CONTENT.formatted(productEntry.getKey(),
+                productEntry.getValue().quantity(),
+                productEntry.getValue().product().price(),
+                calculatePrice(productEntry.getValue()));
+    }
+
+    private static String prepareWithDoscountProductLine(Map.Entry<String, OrderItem> productEntry) {
+        return PRODUCT_LINE_CONTENT_WITH_DISCOUNT.formatted(productEntry.getKey(),
+                productEntry.getValue().quantity(),
+                productEntry.getValue().product().price(),
+                calculatePrice(productEntry.getValue()),
+                productEntry.getValue().discountRule().quantity(),
+                productEntry.getValue().discountRule().price());
+    }
+
+    private static boolean hasDiscount(OrderItem orderItem) {
+        return Objects.nonNull(orderItem.discountRule());
     }
 }

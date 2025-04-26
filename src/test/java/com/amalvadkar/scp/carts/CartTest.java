@@ -137,4 +137,111 @@ class CartTest extends AbstractTest {
         assertThat(cart.totalAmount()).isEqualTo(new BigDecimal("385"));
         assertThat(cart.totalItems()).isEqualTo(4);
     }
+
+    @Test
+    void should_generate_receipt_with_one_product_scan_and_no_discount() {
+        ProductStore.add("P001", new BigDecimal("50"));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P001, Quantity: 1, Unit Price: 50, Subtotal: 50
+                
+                TOTAL AMOUNT DUE: 50
+                """);
+    }
+
+    @Test
+    void should_generate_receipt_with_multiple_product_scan_and_no_discount() {
+        ProductStore.add("P001", new BigDecimal("50"));
+        ProductStore.add("P002", new BigDecimal("100"));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+        cart.scan("P002");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P001, Quantity: 1, Unit Price: 50, Subtotal: 50
+                Product: P002, Quantity: 1, Unit Price: 100, Subtotal: 100
+                
+                TOTAL AMOUNT DUE: 150
+                """);
+    }
+
+    @Test
+    void should_generate_receipt_with_multiple_product_scan_with_discount() {
+        ProductStore.add("P001", new BigDecimal("50"));
+        ProductStore.add("P002", new BigDecimal("30"));
+        ProductStore.add("P003", new BigDecimal("20"));
+        ProductStore.add("P004", new BigDecimal("15"));
+
+        ProductStore.addDiscountRules("P001",
+                List.of(DiscountRule.from(3, new BigDecimal("130"))));
+        ProductStore.addDiscountRules("P002",
+                List.of(DiscountRule.from(2, new BigDecimal(45))));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+
+        cart.scan("P002");
+        cart.scan("P002");
+
+        cart.scan("P003");
+        cart.scan("P004");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P001, Quantity: 3, Unit Price: 50, Subtotal: 130 (Applied discount: 3 for 130)
+                Product: P002, Quantity: 2, Unit Price: 30, Subtotal: 45 (Applied discount: 2 for 45)
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+                
+                TOTAL AMOUNT DUE: 210
+                """);
+    }
+
+    @Test
+    void should_generate_receipt_with_multiple_product_scan_with_discount_for_some_quantity() {
+        ProductStore.add("P001", new BigDecimal("50"));
+        ProductStore.add("P002", new BigDecimal("30"));
+        ProductStore.add("P003", new BigDecimal("20"));
+        ProductStore.add("P004", new BigDecimal("15"));
+
+        ProductStore.addDiscountRules("P001",
+                List.of(DiscountRule.from(3, new BigDecimal("130"))));
+        ProductStore.addDiscountRules("P002",
+                List.of(DiscountRule.from(2, new BigDecimal(45))));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+
+        cart.scan("P002");
+        cart.scan("P002");
+        cart.scan("P002");
+
+        cart.scan("P003");
+        cart.scan("P004");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P001, Quantity: 4, Unit Price: 50, Subtotal: 180 (Applied discount: 3 for 130)
+                Product: P002, Quantity: 3, Unit Price: 30, Subtotal: 75 (Applied discount: 2 for 45)
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+                
+                TOTAL AMOUNT DUE: 290
+                """);
+    }
 }
