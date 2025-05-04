@@ -11,7 +11,15 @@ public record OrderItem(Product product, int quantity, DiscountRule discountRule
         return new OrderItem(product, quantity + 1, discountRule);
     }
 
+    public OrderItem decrementQuantity(){
+        return new OrderItem(product, quantity - 1, discountRule);
+    }
+
     public OrderItem withDiscountRule(DiscountRule discountRule) {
         return new OrderItem(product, quantity, discountRule);
+    }
+
+    public OrderItem removeDiscountRule() {
+        return new OrderItem(product, quantity, null);
     }
 }
