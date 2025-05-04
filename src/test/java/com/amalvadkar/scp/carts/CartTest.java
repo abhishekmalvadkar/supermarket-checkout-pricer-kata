@@ -284,4 +284,197 @@ class CartTest extends AbstractTest {
                 TOTAL AMOUNT DUE: 385
                 """);
     }
+
+    @Test
+    void should_impact_receipt_if_i_un_scan_one_product() {
+        ProductStore.add("P001", new BigDecimal("50"));
+        ProductStore.add("P002", new BigDecimal("30"));
+        ProductStore.add("P003", new BigDecimal("20"));
+        ProductStore.add("P004", new BigDecimal("15"));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+        cart.scan("P002");
+        cart.scan("P003");
+        cart.scan("P004");
+
+        cart.unscan("P001");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P002, Quantity: 1, Unit Price: 30, Subtotal: 30
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+                
+                TOTAL AMOUNT DUE: 65
+                """);
+    }
+
+    @Test
+    void should_impact_receipt_if_i_un_scan_one_product_and_it_has_more_quantity_in_cart() {
+        ProductStore.add("P001", new BigDecimal("50"));
+        ProductStore.add("P002", new BigDecimal("30"));
+        ProductStore.add("P003", new BigDecimal("20"));
+        ProductStore.add("P004", new BigDecimal("15"));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P002");
+        cart.scan("P003");
+        cart.scan("P004");
+
+        cart.unscan("P001");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P001, Quantity: 1, Unit Price: 50, Subtotal: 50
+                Product: P002, Quantity: 1, Unit Price: 30, Subtotal: 30
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+                
+                TOTAL AMOUNT DUE: 115
+                """);
+    }
+
+    @Test
+    void should_impact_receipt_if_i_un_scan_one_product_and_it_has_more_quantity_in_cart_along_with_discount_rule() {
+        ProductStore.add("P001", new BigDecimal("50"));
+        ProductStore.add("P002", new BigDecimal("30"));
+        ProductStore.add("P003", new BigDecimal("20"));
+        ProductStore.add("P004", new BigDecimal("15"));
+
+        ProductStore.addDiscountRules("P001",
+                List.of(DiscountRule.from(3, new BigDecimal("130"))));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P002");
+        cart.scan("P003");
+        cart.scan("P004");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P001, Quantity: 3, Unit Price: 50, Subtotal: 130 (Applied discount: 3 for 130)
+                Product: P002, Quantity: 1, Unit Price: 30, Subtotal: 30
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+                
+                TOTAL AMOUNT DUE: 195
+                """);
+
+        cart.unscan("P001");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+
+                Product: P001, Quantity: 2, Unit Price: 50, Subtotal: 100
+                Product: P002, Quantity: 1, Unit Price: 30, Subtotal: 30
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+
+                TOTAL AMOUNT DUE: 165
+                """);
+    }
+
+    @Test
+    void should_impact_receipt_if_i_un_scan_one_product_and_it_has_more_quantity_in_cart_along_with_discount_rule_on_multiple() {
+        ProductStore.add("P001", new BigDecimal("50"));
+        ProductStore.add("P002", new BigDecimal("30"));
+        ProductStore.add("P003", new BigDecimal("20"));
+        ProductStore.add("P004", new BigDecimal("15"));
+
+        ProductStore.addDiscountRules("P001",
+                List.of(DiscountRule.from(3, new BigDecimal("130"))));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P002");
+        cart.scan("P003");
+        cart.scan("P004");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P001, Quantity: 6, Unit Price: 50, Subtotal: 260 (Applied discount: 3 for 130)
+                Product: P002, Quantity: 1, Unit Price: 30, Subtotal: 30
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+                
+                TOTAL AMOUNT DUE: 325
+                """);
+
+        cart.unscan("P001");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+
+                Product: P001, Quantity: 5, Unit Price: 50, Subtotal: 230 (Applied discount: 3 for 130)
+                Product: P002, Quantity: 1, Unit Price: 30, Subtotal: 30
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+
+                TOTAL AMOUNT DUE: 295
+                """);
+    }
+
+    @Test
+    void should_impact_receipt_if_i_un_scan_all_of_product_and_it_has_more_quantity_in_cart_along_with_discount_rule_on_multiple() {
+        ProductStore.add("P001", new BigDecimal("50"));
+        ProductStore.add("P002", new BigDecimal("30"));
+        ProductStore.add("P003", new BigDecimal("20"));
+        ProductStore.add("P004", new BigDecimal("15"));
+
+        ProductStore.addDiscountRules("P001",
+                List.of(DiscountRule.from(3, new BigDecimal("130"))));
+
+        Cart cart = new Cart();
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P001");
+        cart.scan("P002");
+        cart.scan("P003");
+        cart.scan("P004");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+                
+                Product: P001, Quantity: 6, Unit Price: 50, Subtotal: 260 (Applied discount: 3 for 130)
+                Product: P002, Quantity: 1, Unit Price: 30, Subtotal: 30
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+                
+                TOTAL AMOUNT DUE: 325
+                """);
+
+        cart.unscan("P001");
+        cart.unscan("P001");
+        cart.unscan("P001");
+        cart.unscan("P001");
+        cart.unscan("P001");
+        cart.unscan("P001");
+
+        assertThat(cart.receipt()).isEqualTo("""
+                Receipt
+
+                Product: P002, Quantity: 1, Unit Price: 30, Subtotal: 30
+                Product: P003, Quantity: 1, Unit Price: 20, Subtotal: 20
+                Product: P004, Quantity: 1, Unit Price: 15, Subtotal: 15
+
+                TOTAL AMOUNT DUE: 65
+                """);
+    }
 }

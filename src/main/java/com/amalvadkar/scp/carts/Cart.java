@@ -61,6 +61,33 @@ public class Cart {
         return prepareReceipt(productLines);
     }
 
+    public void unscan(String productCode) {
+        OrderItem orderItem = productCodeToOrderItemMap.get(productCode);
+
+        if (cartHasSingleProductItemForGivenProductCode(orderItem)) {
+            productCodeToOrderItemMap.remove(productCode);
+            return;
+        }
+
+        OrderItem decrementedQuantityOrderItem = orderItem.decrementQuantity();
+        if (productHasDiscountRuleAndQuantityNotMatchedWithRule(decrementedQuantityOrderItem)) {
+            OrderItem orderItemWithoutDiscountRule = decrementedQuantityOrderItem.removeDiscountRule();
+            productCodeToOrderItemMap.put(productCode, orderItemWithoutDiscountRule);
+            return;
+        }
+        productCodeToOrderItemMap.put(productCode, decrementedQuantityOrderItem);
+    }
+
+    private static boolean productHasDiscountRuleAndQuantityNotMatchedWithRule(OrderItem orderItem) {
+        DiscountRule discountRule = orderItem.discountRule();
+        int quantity = orderItem.quantity();
+        return Objects.nonNull(discountRule) && quantity < discountRule.quantity();
+    }
+
+    private static boolean cartHasSingleProductItemForGivenProductCode(OrderItem orderItem) {
+        return orderItem.quantity() == 1;
+    }
+
     private OrderItem findItemInCartBy(String productCode) {
         return productCodeToOrderItemMap.get(productCode);
     }
